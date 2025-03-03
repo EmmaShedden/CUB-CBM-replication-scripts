@@ -321,7 +321,7 @@ def binary_accuracy(output, target):
         return acc
     elif mode == 'f1':
         #true_pos = (pred.int()).eq(target.int()).sum() # FIXME propor
-        print(pred.int().unique(return_counts=True))
+        print(pred.unique(return_counts=True))
         1/0
 
 def multiclass_metric(output, target):
