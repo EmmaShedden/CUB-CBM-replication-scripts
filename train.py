@@ -234,6 +234,7 @@ def train(model, args):
     logger.write(str(args) + '\n')
     logger.write(str(imbalance) + '\n')
     logger.flush()
+    print('\nELS\n')
 
     model = model.cuda()
     criterion = torch.nn.CrossEntropyLoss()
@@ -283,7 +284,7 @@ def train(model, args):
         #train_loss_meter = AverageMeter()
         #train_acc_meter = AverageMeter()
         train_meters = {metric : AverageMeter() for metric in 
-                        ['loss', 'acc']} # ELS
+                        ['loss', 'acc']} # ELS # , 'f1', 'precision', 'recall', 'ece'
         if args.no_img:
             #train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
             train_meters['loss'], train_meters['acc'] = run_epoch_simple( # ELS
