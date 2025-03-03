@@ -32,7 +32,6 @@ class LinearProbeDataset(Dataset):
         return img_data['representation_logits'], img_data['attribute_label']
 
 def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion_list, args, is_training):
-    print('butterflies') # ELS
     if is_training:
         model.train()
     else:

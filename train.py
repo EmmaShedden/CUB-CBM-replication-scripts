@@ -53,7 +53,6 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
     """
     For the rest of the networks (X -> A, cotraining, simple finetune)
     """
-    1/0
     if is_training:
         model.train()
     else:
@@ -202,7 +201,6 @@ def train(model, args):
         if args.no_img:
             train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
         else:
-            print('FUNCTION CALL') # ELS
             train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True)
  
         if not args.ckpt: # evaluate on val set
