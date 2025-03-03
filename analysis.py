@@ -314,7 +314,7 @@ def binary_accuracy(output, target):
     #print(list(pred.data[0].numpy()))
     #print(list(target.data[0].numpy()))
     #print(pred.size(), target.size())
-    mode = 'acc'
+    mode = 'f1'
     if mode == 'acc':
         acc = (pred.int()).eq(target.int()).sum()
         acc = acc*100 / np.prod(np.array(target.size()))
