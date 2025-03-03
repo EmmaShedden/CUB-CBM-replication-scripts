@@ -287,7 +287,7 @@ def accuracy(output, target, topk=(1,)):
     output and target are Torch tensors
     """
     # ELS FIXME make this F1
-    print('\nFUNCTION CALL I\'M GOING TO CHANGE\n')
+    print('\nOTHER FUNCTION CALL I\'M NOT GOING TO CHANGE APPARENTLY\n')
     maxk = max(topk)
     batch_size = target.size(0)
     _, pred = output.topk(maxk, 1, True, True)
@@ -308,15 +308,21 @@ def binary_accuracy(output, target):
     output and target are Torch tensors
     """
     # ELS FIXME make this F1
-    print('\nOTHER FUNCTION CALL I\'M NOT GOING TO CHANGE APPARENTLY\n')
+    print('\nFUNCTION CALL I\'M GOING TO CHANGE\n')
     pred = output.cpu() >= 0.5
     #print(list(output.data.cpu().numpy()))
     #print(list(pred.data[0].numpy()))
     #print(list(target.data[0].numpy()))
     #print(pred.size(), target.size())
-    acc = (pred.int()).eq(target.int()).sum()
-    acc = acc*100 / np.prod(np.array(target.size()))
-    return acc
+    mode = 'acc'
+    if mode == 'acc':
+        acc = (pred.int()).eq(target.int()).sum()
+        acc = acc*100 / np.prod(np.array(target.size()))
+        return acc
+    elif mode == 'f1':
+        #true_pos = (pred.int()).eq(target.int()).sum() # FIXME propor
+        print(pred.int().unique(return_counts=True))
+        1/0
 
 def multiclass_metric(output, target):
     """
