@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from CUB.models import MLP
 from CUB.dataset import find_class_imbalance
-from analysis import AverageMeter, Logger, binary_accuracy
+from CUB.analysis import AverageMeter, Logger, binary_accuracy
 from CUB.config import BASE_DIR, N_CLASSES, N_ATTRIBUTES, UPWEIGHT_RATIO, MIN_LR, LR_DECAY_SIZE
 
 

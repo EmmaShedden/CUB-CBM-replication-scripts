@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import math
 import torch
 import numpy as np
-from analysis import Logger, AverageMeter, accuracy, binary_accuracy
+from CUB.analysis import Logger, AverageMeter, accuracy, binary_accuracy
 
 from CUB import probe, tti, gen_cub_synthetic, hyperopt
 from CUB.dataset import load_data, find_class_imbalance
@@ -56,6 +56,7 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
     if is_training:
         print('\nSTARTING TRAINING EPOCH\n') # ELS
         model.train()
+        print('\nFINISHED TRAINING\n') # ELS
     else:
         model.eval()
 

@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from CUB.dataset import load_data
 from CUB.config import BASE_DIR, N_CLASSES, N_ATTRIBUTES
-from analysis import AverageMeter, multiclass_metric, accuracy, binary_accuracy
+from CUB.analysis import AverageMeter, multiclass_metric, accuracy, binary_accuracy
 
 K = [1, 3, 5] #top k class accuracies to compute
 
