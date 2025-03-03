@@ -320,9 +320,13 @@ def binary_accuracy(output, target):
         acc = acc*100 / np.prod(np.array(target.size()))
         return acc
     elif mode == 'f1':
-        #true_pos = (pred.int()).eq(target.int()).sum() # FIXME propor
-        print(pred.unique(return_counts=True))
-        1/0
+        tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
+        fp_count = pred.eq(True).logical_and(target.eq(False)).int().sum() # false positives
+        fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
+        precision = tp_count / (tp_count + fp_count)
+        recall = tp_count / (tp_count + fn_count)
+        f = 2 * (precision * recall) / (precision + recall)
+        return f
 
 def multiclass_metric(output, target):
     """
