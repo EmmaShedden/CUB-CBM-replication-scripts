@@ -235,6 +235,9 @@ def train(model, args):
     logger.write(str(imbalance) + '\n')
     logger.flush()
     print('\nELS\n')
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
 
     model = model.cuda()
     criterion = torch.nn.CrossEntropyLoss()
