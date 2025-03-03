@@ -54,6 +54,7 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
     For the rest of the networks (X -> A, cotraining, simple finetune)
     """
     if is_training:
+        print('\nSTARTING TRAINING EPOCH\n') # ELS
         model.train()
     else:
         model.eval()
@@ -191,8 +192,6 @@ def train(model, args):
     best_val_epoch = -1
     best_val_loss = float('inf')
     best_val_acc = 0
-
-    print('\nSTARTING TRAINING EPOCHS\n') # ELS
 
     for epoch in range(0, args.epochs):
         train_loss_meter = AverageMeter()
