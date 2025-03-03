@@ -11,6 +11,7 @@ import math
 import torch
 import numpy as np
 from CUB.analysis import Logger, AverageMeter, accuracy, binary_accuracy
+from CUB.analysis import binary_f1_score, binary_precision, binary_recall, binary_ece
 
 from CUB import probe, tti, gen_cub_synthetic, hyperopt
 from CUB.dataset import load_data, find_class_imbalance
@@ -49,7 +50,85 @@ def run_epoch_simple(model, optimizer, loader, loss_meter, acc_meter, criterion,
             optimizer.step() #optimizer step to update parameters
     return loss_meter, acc_meter
 
-def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_criterion, args, is_training):
+# def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_criterion, args, is_training):
+#     """
+#     For the rest of the networks (X -> A, cotraining, simple finetune)
+#     """
+#     if is_training:
+#         model.train()
+#     else:
+#         model.eval()
+
+#     for _, data in enumerate(loader):
+#         if attr_criterion is None:
+#             inputs, labels = data
+#             attr_labels, attr_labels_var = None, None
+#         else:
+#             inputs, labels, attr_labels = data
+#             if args.n_attributes > 1:
+#                 attr_labels = [i.long() for i in attr_labels]
+#                 attr_labels = torch.stack(attr_labels).t()#.float() #N x 312
+#             else:
+#                 if isinstance(attr_labels, list):
+#                     attr_labels = attr_labels[0]
+#                 attr_labels = attr_labels.unsqueeze(1)
+#             attr_labels_var = torch.autograd.Variable(attr_labels).float()
+#             attr_labels_var = attr_labels_var.cuda() if torch.cuda.is_available() else attr_labels_var
+
+#         inputs_var = torch.autograd.Variable(inputs)
+#         inputs_var = inputs_var.cuda() if torch.cuda.is_available() else inputs_var
+#         labels_var = torch.autograd.Variable(labels)
+#         labels_var = labels_var.cuda() if torch.cuda.is_available() else labels_var
+
+#         if is_training and args.use_aux:
+#             outputs, aux_outputs = model(inputs_var)
+#             losses = []
+#             out_start = 0
+#             if not args.bottleneck: #loss main is for the main task label (always the first output)
+#                 loss_main = 1.0 * criterion(outputs[0], labels_var) + 0.4 * criterion(aux_outputs[0], labels_var)
+#                 losses.append(loss_main)
+#                 out_start = 1
+#             if attr_criterion is not None and args.attr_loss_weight > 0: #X -> A, cotraining, end2end
+#                 for i in range(len(attr_criterion)):
+#                     losses.append(args.attr_loss_weight * (1.0 * attr_criterion[i](outputs[i+out_start].squeeze().type(torch.cuda.FloatTensor), attr_labels_var[:, i]) \
+#                                                             + 0.4 * attr_criterion[i](aux_outputs[i+out_start].squeeze().type(torch.cuda.FloatTensor), attr_labels_var[:, i])))
+#         else: #testing or no aux logits
+#             outputs = model(inputs_var)
+#             losses = []
+#             out_start = 0
+#             if not args.bottleneck:
+#                 loss_main = criterion(outputs[0], labels_var)
+#                 losses.append(loss_main)
+#                 out_start = 1
+#             if attr_criterion is not None and args.attr_loss_weight > 0: #X -> A, cotraining, end2end
+#                 for i in range(len(attr_criterion)):
+#                     losses.append(args.attr_loss_weight * attr_criterion[i](outputs[i+out_start].squeeze().type(torch.cuda.FloatTensor), attr_labels_var[:, i]))
+
+#         if args.bottleneck: #attribute accuracy
+#             sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+#             acc = binary_accuracy(sigmoid_outputs, attr_labels)
+#             acc_meter.update(acc.data.cpu().numpy(), inputs.size(0))
+#         else:
+#             acc = accuracy(outputs[0], labels, topk=(1,)) #only care about class prediction accuracy
+#             acc_meter.update(acc[0], inputs.size(0))
+
+#         if attr_criterion is not None:
+#             if args.bottleneck:
+#                 total_loss = sum(losses)/ args.n_attributes
+#             else: #cotraining, loss by class prediction and loss by attribute prediction have the same weight
+#                 total_loss = losses[0] + sum(losses[1:])
+#                 if args.normalize_loss:
+#                     total_loss = total_loss / (1 + args.attr_loss_weight * args.n_attributes)
+#         else: #finetune
+#             total_loss = sum(losses)
+#         loss_meter.update(total_loss.item(), inputs.size(0))
+#         if is_training:
+#             optimizer.zero_grad()
+#             total_loss.backward()
+#             optimizer.step()
+#     return loss_meter, acc_meter
+
+def run_epoch(model, optimizer, loader, meters, criterion, attr_criterion, args, is_training):
     """
     For the rest of the networks (X -> A, cotraining, simple finetune)
     """
@@ -107,11 +186,17 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
 
         if args.bottleneck: #attribute accuracy
             sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
-            acc = binary_accuracy(sigmoid_outputs, attr_labels)
-            acc_meter.update(acc.data.cpu().numpy(), inputs.size(0))
+            helpers = {'acc' : binary_accuracy, 
+                       'f1' : binary_f1_score, 
+                       'precision' : binary_precision, 
+                       'recall' : binary_recall, 
+                       'ece' : binary_ece}
+            for metric in meters.keys():
+                v = helpers[metric](sigmoid_outputs, attr_labels)
+                meters[metric].update(v.data.cpu().numpy(), inputs.size(0))
         else:
             acc = accuracy(outputs[0], labels, topk=(1,)) #only care about class prediction accuracy
-            acc_meter.update(acc[0], inputs.size(0))
+            meters['acc'].update(acc[0], inputs.size(0))
 
         if attr_criterion is not None:
             if args.bottleneck:
@@ -122,12 +207,12 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
                     total_loss = total_loss / (1 + args.attr_loss_weight * args.n_attributes)
         else: #finetune
             total_loss = sum(losses)
-        loss_meter.update(total_loss.item(), inputs.size(0))
+        meters['loss'].update(total_loss.item(), inputs.size(0))
         if is_training:
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
-    return loss_meter, acc_meter
+    return meters
 
 def train(model, args):
     # Determine imbalance
@@ -195,43 +280,62 @@ def train(model, args):
     best_val_acc = 0
 
     for epoch in range(0, args.epochs):
-        train_loss_meter = AverageMeter()
-        train_acc_meter = AverageMeter()
-        #train_f1_meter = AverageMeter() # ELS
+        #train_loss_meter = AverageMeter()
+        #train_acc_meter = AverageMeter()
+        train_meters = {metric : AverageMeter() for metric in 
+                        ['loss', 'acc', 'f1', 'precision', 'recall', 'ece']} # ELS
         if args.no_img:
-            train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
+            #train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
+            train_meters['loss'], train_meters['acc'] = run_epoch_simple( # ELS
+                model, optimizer, train_loader, train_meters['loss'], train_meters['acc'], criterion, args, is_training=True)
         else:
-            train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True)
- 
+            #train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True)
+            train_meters = run_epoch( # ELS
+                model, optimizer, train_loader, train_meters, criterion, attr_criterion, args, is_training=True)
+
         if not args.ckpt: # evaluate on val set
-            val_loss_meter = AverageMeter()
-            val_acc_meter = AverageMeter()
+            #val_loss_meter = AverageMeter()
+            #val_acc_meter = AverageMeter()
+            val_meters = {metric : AverageMeter() for metric in ['loss', 'acc', 'f1', 'ece1']} # ELS
         
             with torch.no_grad():
                 if args.no_img:
-                    val_loss_meter, val_acc_meter = run_epoch_simple(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, args, is_training=False)
+                    #val_loss_meter, val_acc_meter = run_epoch_simple(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, args, is_training=False)
+                    val_meters['loss'], val_meters['acc'] = run_epoch_simple( # ELS
+                        model, optimizer, val_loader, val_meters['loss'], val_meters['acc'], criterion, args, is_training=False)
                 else:
-                    val_loss_meter, val_acc_meter = run_epoch(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, attr_criterion, args, is_training=False)
+                    #val_loss_meter, val_acc_meter = run_epoch(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, attr_criterion, args, is_training=False)
+                    val_meters = run_epoch( # ELS
+                        model, optimizer, val_loader, val_meters, criterion, attr_criterion, args, is_training=False)
 
         else: #retraining
-            val_loss_meter = train_loss_meter
-            val_acc_meter = train_acc_meter
+            # val_loss_meter = train_loss_meter
+            # val_acc_meter = train_acc_meter
+            val_meters = train_meters # ELS
 
-        if best_val_acc < val_acc_meter.avg:
+        #if best_val_acc < val_acc_meter.avg:
+        if best_val_acc < val_meters['acc'].avg: # ELS
             best_val_epoch = epoch
-            best_val_acc = val_acc_meter.avg
+            # best_val_acc = val_acc_meter.avg
+            best_val_acc = val_meters['acc'].avg # ELS
             logger.write('New model best model at epoch %d\n' % epoch)
             torch.save(model, os.path.join(args.log_dir, 'best_model_%d.pth' % args.seed))
             #if best_val_acc >= 100: #in the case of retraining, stop when the model reaches 100% accuracy on both train + val sets
             #    break
 
-        train_loss_avg = train_loss_meter.avg
-        val_loss_avg = val_loss_meter.avg
+        # ELS
+        # train_loss_avg = train_loss_meter.avg
+        # val_loss_avg = val_loss_meter.avg
+        train_loss_avg = train_meters['loss'].avg
+        val_loss_avg = val_meters['loss'].avg
         
-        logger.write('Epoch [%d]:\tTrain loss: %.4f\tTrain accuracy: %.4f\t'
-                'Val loss: %.4f\tVal acc: %.4f\t'
-                'Best val epoch: %d\n'
-                % (epoch, train_loss_avg, train_acc_meter.avg, val_loss_avg, val_acc_meter.avg, best_val_epoch)) 
+        # logger.write('Epoch [%d]:\tTrain loss: %.4f\tTrain accuracy: %.4f\t'
+        #         'Val loss: %.4f\tVal acc: %.4f\t'
+        #         'Best val epoch: %d\n'
+        #         #% (epoch, train_loss_avg, train_acc_meter.avg, val_loss_avg, val_acc_meter.avg, best_val_epoch)) 
+        #         % (epoch, train_loss_avg, train_meters['acc'].avg, val_loss_avg, val_meters.avg['acc'], best_val_epoch)) 
+        train_metrics_avg_str = ['Train {}: {:04f}'.format(metric, meter.avg) for metric, meter in train_meters.items()]
+        logger.write('Epoch [{}]:\t{}'.format(epoch, '\t'.join(train_metrics_avg_str)))
         logger.flush()
         
         if epoch <= stop_epoch:

@@ -301,29 +301,78 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
+# def binary_accuracy(output, target):
+#     """
+#     Computes the accuracy for multiple binary predictions
+#     output and target are Torch tensors
+#     """
+#     pred = output.cpu() >= 0.5
+#     #print(list(output.data.cpu().numpy()))
+#     #print(list(pred.data[0].numpy()))
+#     #print(list(target.data[0].numpy()))
+#     #print(pred.size(), target.size())
+#     mode = 'f1' # ELS change this to change the logged metric
+#     if mode == 'acc':
+#         acc = (pred.int()).eq(target.int()).sum()
+#         acc = acc*100 / np.prod(np.array(target.size()))
+#         return acc
+#     elif mode == 'f1':
+#         tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
+#         fp_count = pred.eq(True).logical_and(target.eq(False)).int().sum() # false positives
+#         fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
+#         precision = tp_count / (tp_count + fp_count)
+#         recall = tp_count / (tp_count + fn_count)
+#         f = 2 * (precision * recall) / (precision + recall)
+#         return f
+
 def binary_accuracy(output, target):
     """
     Computes the accuracy for multiple binary predictions
     output and target are Torch tensors
     """
     pred = output.cpu() >= 0.5
-    #print(list(output.data.cpu().numpy()))
-    #print(list(pred.data[0].numpy()))
-    #print(list(target.data[0].numpy()))
-    #print(pred.size(), target.size())
-    mode = 'f1' # ELS change this to change the logged metric
-    if mode == 'acc':
-        acc = (pred.int()).eq(target.int()).sum()
-        acc = acc*100 / np.prod(np.array(target.size()))
-        return acc
-    elif mode == 'f1':
-        tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
-        fp_count = pred.eq(True).logical_and(target.eq(False)).int().sum() # false positives
-        fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
-        precision = tp_count / (tp_count + fp_count)
-        recall = tp_count / (tp_count + fn_count)
-        f = 2 * (precision * recall) / (precision + recall)
-        return f
+    acc = (pred.int()).eq(target.int()).sum()
+    acc = acc*100 / np.prod(np.array(target.size()))
+    return acc
+
+def binary_f1_score(output, target):
+    """
+    Computes the f1 for multiple binary predictions
+    output and target are Torch tensors
+    """
+    pred = output.cpu() >= 0.5
+    tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
+    fp_count = pred.eq(True).logical_and(target.eq(False)).int().sum() # false positives
+    fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
+    precision = tp_count / (tp_count + fp_count)
+    recall = tp_count / (tp_count + fn_count)
+    f = 2 * (precision * recall) / (precision + recall)
+    return f
+
+def binary_precision(output, target):
+    """
+    Computes the precision for multiple binary predictions
+    output and target are Torch tensors
+    """
+    pred = output.cpu() >= 0.5
+    tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
+    fp_count = pred.eq(True).logical_and(target.eq(False)).int().sum() # false positives
+    precision = tp_count / (tp_count + fp_count)
+    return precision
+
+def binary_recall(output, target):
+    """
+    Computes the recall for multiple binary predictions
+    output and target are Torch tensors
+    """
+    pred = output.cpu() >= 0.5
+    tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
+    fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
+    recall = tp_count / (tp_count + fn_count)
+    return recall
+
+def binary_ece(output, target):
+    print(output.shape)
 
 def multiclass_metric(output, target):
     """
