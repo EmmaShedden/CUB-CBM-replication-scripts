@@ -286,8 +286,7 @@ def accuracy(output, target, topk=(1,)):
     Computes the precision@k for the specified values of k
     output and target are Torch tensors
     """
-    # ELS FIXME make this F1
-    print('\nOTHER FUNCTION CALL I\'M NOT GOING TO CHANGE APPARENTLY\n')
+    # ELS FIXME add modes here like with binary_accuracy if we also want to look at class metrics
     maxk = max(topk)
     batch_size = target.size(0)
     _, pred = output.topk(maxk, 1, True, True)
@@ -307,14 +306,12 @@ def binary_accuracy(output, target):
     Computes the accuracy for multiple binary predictions
     output and target are Torch tensors
     """
-    # ELS FIXME make this F1
-    print('\nFUNCTION CALL I\'M GOING TO CHANGE\n')
     pred = output.cpu() >= 0.5
     #print(list(output.data.cpu().numpy()))
     #print(list(pred.data[0].numpy()))
     #print(list(target.data[0].numpy()))
     #print(pred.size(), target.size())
-    mode = 'f1'
+    mode = 'f1' # ELS change this to change the logged metric
     if mode == 'acc':
         acc = (pred.int()).eq(target.int()).sum()
         acc = acc*100 / np.prod(np.array(target.size()))
