@@ -178,6 +178,8 @@ def train(model, args):
     val_data_path = train_data_path.replace('train.pkl', 'val.pkl')
     logger.write('train data path: %s\n' % train_data_path)
 
+    print('\nLOADING DATA\n') # ELS
+
     if args.ckpt: #retraining
         train_loader = load_data([train_data_path, val_data_path], args.use_attr, args.no_img, args.batch_size, args.uncertain_labels, image_dir=args.image_dir, \
                                  n_class_attr=args.n_class_attr, resampling=args.resampling)
@@ -191,6 +193,8 @@ def train(model, args):
     best_val_loss = float('inf')
     best_val_acc = 0
 
+    print('\nSTARTING TRAINING EPOCHS\n') # ELS
+
     for epoch in range(0, args.epochs):
         train_loss_meter = AverageMeter()
         train_acc_meter = AverageMeter()
@@ -198,6 +202,7 @@ def train(model, args):
         if args.no_img:
             train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
         else:
+            print('FUNCTION CALL') # ELS
             train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True)
  
         if not args.ckpt: # evaluate on val set
