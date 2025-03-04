@@ -190,13 +190,16 @@ def run_epoch(model, optimizer, loader, meters, criterion, attr_criterion, args,
                        'f1' : binary_f1_score, 
                        'precision' : binary_precision, 
                        'recall' : binary_recall, 
-                       **{m : (lambda o, t: binary_ece(o, t, m)) 
+                       **{m : lambda o, t: binary_ece(o, t, m) 
                           for m in ['K1', 'K2', 'Kmax']}}
+            print(helpers) # debug
             for metric in meters.keys():
                 # everything that isn't 'loss'
                 if metric in helpers:
+                    print(metric) # debug
                     v = helpers[metric](sigmoid_outputs, attr_labels)
                     meters[metric].update(v.data.cpu().numpy(), inputs.size(0))
+            print('----------------') # debug
         else:
             acc = accuracy(outputs[0], labels, topk=(1,)) #only care about class prediction accuracy
             meters['acc'].update(acc[0], inputs.size(0))
