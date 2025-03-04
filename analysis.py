@@ -381,7 +381,7 @@ def binary_ece(output, target, measure='K1', n=10):
     for j in range(len(t)):
         try:
             ece += bce(o[j], t[j])
-        except Exception() as e:
+        except Exception as e:
             print('-----------------')
             print(measure)
             print(j)
