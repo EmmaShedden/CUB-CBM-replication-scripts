@@ -377,7 +377,7 @@ def binary_ece(output, target, measure='K1', n=10):
     bce = CalibrationError(n_bins=n, norm=ece_measure_to_norm[measure])
     o = torch.transpose(output, 0, 1).cpu()
     t = torch.transpose(target, 0, 1)
-    ece = torch.tensor(0.0)
+    ece = torch.tensor(0.0, requires_grad=False)
     for j in range(len(t)):
         ece += bce(o[j], t[j])
     
