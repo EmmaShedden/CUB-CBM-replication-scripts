@@ -382,7 +382,6 @@ def binary_ece(output, target, measure='K1', n=10):
         ece += bce(o[j], t[j])
     
     ece /= len(t)
-    print(measure, ece)
     return ece
 
 def multiclass_metric(output, target):
