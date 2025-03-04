@@ -379,7 +379,17 @@ def binary_ece(output, target, measure='K1', n=10):
     t = torch.transpose(target, 0, 1)
     ece = torch.tensor(0.0) # , requires_grad=False
     for j in range(len(t)):
-        ece += bce(o[j], t[j])
+        try:
+            ece += bce(o[j], t[j])
+        except Exception() as e:
+            print('-----------------')
+            print(measure)
+            print(j)
+            print(o.shape, t.shape)
+            print(ece)
+            print(o[j].shape, t[j].shape)
+            print('-----------------')
+            raise e
     
     ece /= len(t)
     return ece
