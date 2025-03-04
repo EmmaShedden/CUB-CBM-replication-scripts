@@ -190,7 +190,7 @@ def run_epoch(model, optimizer, loader, meters, criterion, attr_criterion, args,
                        'f1' : binary_f1_score, 
                        'precision' : binary_precision, 
                        'recall' : binary_recall, 
-                       **{m : lambda o, t: binary_ece(output=o, target=t, measure=m) 
+                       **{m : lambda o, t, m=m: binary_ece(output=o, target=t, measure=m) 
                           for m in ['K1', 'K2', 'Kmax']}}
             print(helpers) # debug
             for metric in meters.keys():
