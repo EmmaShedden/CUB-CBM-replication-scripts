@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_squared_error, precision_recall_fscore_support, accuracy_score, precision_score, recall_score, balanced_accuracy_score, classification_report
+import torch
 from torchmetrics.classification import CalibrationError
 
 # ---------------------- OAI ----------------------
@@ -375,9 +376,9 @@ ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
 def binary_ece(output, target, measure='K1'):
     bce = CalibrationError(n_bins=10, norm=ece_measure_to_norm[measure])
     print(output.shape, target.shape, target.shape[1], len(target))
-    o = output.transpose()
-    t = target.transpose()
-    for j in range(target.shape[1]):
+    o = torch.transpose(output, 0, 1)
+    t = torch.transpose(target, 0, 1)
+    for j in range(len(t)):
         ece = bce(o[j], t[j])
         print(ece)
     1/0
