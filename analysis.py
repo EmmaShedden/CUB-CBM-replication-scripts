@@ -371,6 +371,7 @@ def binary_recall(output, target):
     fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
     recall = tp_count / (tp_count + fn_count)
     print(recall)
+    print(type(recall))
     return recall
 
 ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
@@ -378,7 +379,7 @@ def binary_ece(output, target, measure='K1', n=10):
     bce = CalibrationError(n_bins=n, norm=ece_measure_to_norm[measure])
     o = torch.transpose(output, 0, 1).cpu()
     t = torch.transpose(target, 0, 1)
-    ece = torch.tensor([0.0])
+    ece = torch.tensor(0.0)
     for j in range(len(t)):
         ece += bce(o[j], t[j])
     
