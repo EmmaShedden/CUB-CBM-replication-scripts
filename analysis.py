@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_squared_error, precision_recall_fscore_support, accuracy_score, precision_score, recall_score, balanced_accuracy_score, classification_report
-
+from torchmetrics.classification import BinaryCalibrationError
 
 # ---------------------- OAI ----------------------
 def plot(x, y, **kw):
@@ -371,11 +371,13 @@ def binary_recall(output, target):
     recall = tp_count / (tp_count + fn_count)
     return recall
 
-def binary_ece(output, target):
-    print(output.shape)
-    print(target.shape)
-    print(output.data[0])
-    return 0
+ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
+def binary_ece(output, target, measure='K1'):
+    bce = BinaryCalibrationError(n_bins=10, norm=ece_measure_to_norm[measure])
+    for j in range(target.shape[1]):
+        ece = bce(output[:, j], target[:, j])
+        print(ece)
+    1/0
 
 def multiclass_metric(output, target):
     """
