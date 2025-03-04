@@ -376,7 +376,7 @@ ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
 def binary_ece(output, target, measure='K1'):
     bce = CalibrationError(n_bins=10, norm=ece_measure_to_norm[measure])
     print(output.shape, target.shape, target.shape[1], len(target))
-    o = torch.transpose(output, 0, 1)
+    o = torch.transpose(output, 0, 1).cpu()
     t = torch.transpose(target, 0, 1)
     for j in range(len(t)):
         ece = bce(o[j], t[j])
