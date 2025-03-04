@@ -340,13 +340,10 @@ def train(model, args):
         #         % (epoch, train_loss_avg, train_meters['acc'].avg, val_loss_avg, val_meters.avg['acc'], best_val_epoch)) 
         log_str = ['{}: {:04f}'.format(metric, meter.avg) for metric, meter in train_meters.items()]
         delta = 4
-        # print(log_str)
-        # print(math.ceil(len(log_str) / delta))
-        # print(math.ceil(len(log_str) / delta, dtype=int))
         log_str = ['\t'.join(log_str[i*delta : (i+1) * delta]) 
                    for i in range(math.ceil(len(log_str) / delta))]
         log_str = '\n\t\t'.join(log_str)
-        logger.write('Epoch [{}]:\n\tTrain {}\n'.format(epoch, '\t'.join(log_str)))
+        logger.write('Epoch [{}]:\n\tTrain {}\n'.format(epoch, log_str))
         logger.flush()
         
         if epoch <= stop_epoch:
