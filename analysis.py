@@ -374,9 +374,11 @@ def binary_recall(output, target):
 ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
 def binary_ece(output, target, measure='K1'):
     bce = CalibrationError(n_bins=10, norm=ece_measure_to_norm[measure])
-    print(output.shape, target.shape, target.shape[1])
+    print(output.shape, target.shape, target.shape[1], len(target))
+    o = output.transpose()
+    t = target.transpose()
     for j in range(target.shape[1]):
-        ece = bce(output[:, j], target[:, j])
+        ece = bce(o[j], t[j])
         print(ece)
     1/0
 
