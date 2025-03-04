@@ -370,8 +370,6 @@ def binary_recall(output, target):
     tp_count = pred.eq(True).logical_and(target.eq(True)).int().sum() # true positives
     fn_count = pred.eq(False).logical_and(target.eq(True)).int().sum() # false negatives
     recall = tp_count / (tp_count + fn_count)
-    print(recall)
-    print(type(recall))
     return recall
 
 ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
@@ -384,7 +382,7 @@ def binary_ece(output, target, measure='K1', n=10):
         ece += bce(o[j], t[j])
     
     ece /= len(t)
-    print(ece)
+    print(measure, ece)
     return ece
 
 def multiclass_metric(output, target):
