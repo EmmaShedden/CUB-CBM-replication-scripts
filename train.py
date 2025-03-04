@@ -192,8 +192,10 @@ def run_epoch(model, optimizer, loader, meters, criterion, attr_criterion, args,
                        'recall' : binary_recall, 
                        'ece' : binary_ece}
             for metric in meters.keys():
-                v = helpers[metric](sigmoid_outputs, attr_labels)
-                meters[metric].update(v.data.cpu().numpy(), inputs.size(0))
+                # everything that isn't 'loss'
+                if metric in helpers:
+                    v = helpers[metric](sigmoid_outputs, attr_labels)
+                    meters[metric].update(v.data.cpu().numpy(), inputs.size(0))
         else:
             acc = accuracy(outputs[0], labels, topk=(1,)) #only care about class prediction accuracy
             meters['acc'].update(acc[0], inputs.size(0))
