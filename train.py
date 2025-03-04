@@ -289,7 +289,7 @@ def train(model, args):
         #train_loss_meter = AverageMeter()
         #train_acc_meter = AverageMeter()
         train_meters = {metric : AverageMeter() for metric in 
-                        ['loss', 'acc']} # ELS # , 'f1', 'precision', 'recall', 'ece'
+                        ['loss', 'acc', 'f1']} # ELS # , 'precision', 'recall', 'ece'
         if args.no_img:
             #train_loss_meter, train_acc_meter = run_epoch_simple(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, args, is_training=True)
             train_meters['loss'], train_meters['acc'] = run_epoch_simple( # ELS
@@ -332,8 +332,6 @@ def train(model, args):
         # ELS
         # train_loss_avg = train_loss_meter.avg
         # val_loss_avg = val_loss_meter.avg
-        train_loss_avg = train_meters['loss'].avg
-        val_loss_avg = val_meters['loss'].avg
         
         # logger.write('Epoch [%d]:\tTrain loss: %.4f\tTrain accuracy: %.4f\t'
         #         'Val loss: %.4f\tVal acc: %.4f\t'
@@ -341,7 +339,7 @@ def train(model, args):
         #         #% (epoch, train_loss_avg, train_acc_meter.avg, val_loss_avg, val_acc_meter.avg, best_val_epoch)) 
         #         % (epoch, train_loss_avg, train_meters['acc'].avg, val_loss_avg, val_meters.avg['acc'], best_val_epoch)) 
         train_metrics_avg_str = ['Train {}: {:04f}'.format(metric, meter.avg) for metric, meter in train_meters.items()]
-        logger.write('Epoch [{}]:\t{}'.format(epoch, '\t'.join(train_metrics_avg_str)))
+        logger.write('Epoch [{}]:\t{}\n'.format(epoch, '\t'.join(train_metrics_avg_str)))
         logger.flush()
         
         if epoch <= stop_epoch:
@@ -353,7 +351,7 @@ def train(model, args):
         # if epoch % args.save_step == 0:
         #     torch.save(model, os.path.join(args.log_dir, '%d_model.pth' % epoch))
 
-        if epoch >= 100 and val_acc_meter.avg < 3:
+        if epoch >= 100 and val_meters['acc'].avg < 3:
             print("Early stopping because of low accuracy")
             break
         if epoch - best_val_epoch >= 100:
