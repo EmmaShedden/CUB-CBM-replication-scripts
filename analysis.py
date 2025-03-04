@@ -375,6 +375,7 @@ def binary_ece(output, target):
     print(output.shape)
     print(target.shape)
     print(output.data[0])
+    return 0
 
 def multiclass_metric(output, target):
     """
