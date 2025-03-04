@@ -133,9 +133,7 @@ def run_epoch(model, optimizer, loader, meters, criterion, attr_criterion, args,
     For the rest of the networks (X -> A, cotraining, simple finetune)
     """
     if is_training:
-        print('\nSTARTING TRAINING EPOCH\n') # ELS
         model.train()
-        print('\nFINISHED TRAINING\n') # ELS
     else:
         model.eval()
 
@@ -340,8 +338,12 @@ def train(model, args):
         #         'Best val epoch: %d\n'
         #         #% (epoch, train_loss_avg, train_acc_meter.avg, val_loss_avg, val_acc_meter.avg, best_val_epoch)) 
         #         % (epoch, train_loss_avg, train_meters['acc'].avg, val_loss_avg, val_meters.avg['acc'], best_val_epoch)) 
-        train_metrics_avg_str = ['{}: {:04f}'.format(metric, meter.avg) for metric, meter in train_meters.items()]
-        logger.write('Epoch [{}]:\n\tTrain {}\n'.format(epoch, '\t'.join(train_metrics_avg_str)))
+        log_str = ['{}: {:04f}'.format(metric, meter.avg) for metric, meter in train_meters.items()]
+        delta = 4
+        log_str = ['\t'.join(log_str[i:i+delta]) 
+                   for i in range(np.ceil(len(log_str) / delta, dtype=int))]
+        log_str = '\n\t\t'.join(log_str)
+        logger.write('Epoch [{}]:\n\tTrain {}\n'.format(epoch, '\t'.join(log_str)))
         logger.flush()
         
         if epoch <= stop_epoch:
