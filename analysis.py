@@ -373,15 +373,17 @@ def binary_recall(output, target):
     return recall
 
 ece_measure_to_norm = {'K1' : 'l1', 'K2' : 'l2', 'Kmax' : 'max'}
-def binary_ece(output, target, measure='K1'):
-    bce = CalibrationError(n_bins=10, norm=ece_measure_to_norm[measure])
+def binary_ece(output, target, measure='K1', n=10):
+    bce = CalibrationError(n_bins=n, norm=ece_measure_to_norm[measure])
     print(output.shape, target.shape, target.shape[1], len(target))
     o = torch.transpose(output, 0, 1).cpu()
     t = torch.transpose(target, 0, 1)
+    ece = torch.tensor([0.0])
     for j in range(len(t)):
-        ece = bce(o[j], t[j])
-        print(ece)
-    1/0
+        ece += bce(o[j], t[j])
+    
+    ece /= len(t)
+    return ece
 
 def multiclass_metric(output, target):
     """
