@@ -378,7 +378,9 @@ def binary_ece(output, target, measure='K1', n=10):
     o = torch.transpose(output, 0, 1).cpu()
     t = torch.transpose(target, 0, 1)
     ece = torch.tensor(0.0, requires_grad=False)
+    print(ece)
     for j in range(len(t)):
+        print(bce(o[j], t[j]))
         ece += bce(o[j], t[j])
     
     ece /= len(t)
